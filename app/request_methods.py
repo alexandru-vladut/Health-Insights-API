@@ -134,6 +134,22 @@ def state_diff_from_mean(question, state):
     return result
 
 
+def mean_by_category(question):
+    # Filter the DataFrame based on the question
+    df_filtered = webserver.data_ingestor.dataframe[(webserver.data_ingestor.dataframe['Question'] == question)]
+        # webserver.data_ingestor.dataframe['StratificationCategory1'].notna() &
+        # webserver.data_ingestor.dataframe['Stratification1'].notna()]
+
+    # Group by state, category, and interval, then calculate the mean
+    mean_by_category = df_filtered.groupby(['LocationDesc', 'StratificationCategory1', 'Stratification1'])['Data_Value'].mean()
+
+    # Convert group keys to string format and create the result dictionary
+    result = {f"('{state}', '{category}', '{interval}')": value for (state, category, interval), value in mean_by_category.items()}
+
+    # Return result dictionary
+    return result
+
+
 def state_mean_by_category(question, state):
     # Filter the DataFrame based on the question and state
     df_filtered = webserver.data_ingestor.dataframe[
@@ -144,8 +160,9 @@ def state_mean_by_category(question, state):
     # Group by category and its interval, then calculate the mean
     state_mean_by_category = df_filtered.groupby(['StratificationCategory1', 'Stratification1'])['Data_Value'].mean()
 
-    # Convert to a dictionary in the desired format
+    # Convert group keys to string format and create the result dictionary
     result = {state: {f"('{category}', '{interval}')": value for (category, interval), value in state_mean_by_category.items()}}
 
+    # Return result dictionary
     return result
 
