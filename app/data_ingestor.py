@@ -8,7 +8,7 @@ class DataIngestor:
         # TODO: Read csv from csv_path
 
         # Defining the columns to read from the CSV file (read only necessary columns to save memory)
-        columns_to_read = ['LocationAbbr', 'LocationDesc', 'Question', 'Data_Value']
+        columns_to_read = ['LocationDesc', 'Question', 'Data_Value', 'StratificationCategory1', 'Stratification1']
 
         # Reading the CSV file into a DataFrame
         self.dataframe = pandas.read_csv(csv_path, usecols=columns_to_read)
