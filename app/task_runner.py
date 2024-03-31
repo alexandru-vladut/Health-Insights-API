@@ -1,6 +1,5 @@
 from queue import Queue
-from threading import Thread, Event
-import time
+from threading import Thread, Lock
 import os
 
 class ThreadPool:
@@ -20,6 +19,10 @@ class ThreadPool:
         # Define the job queue
         self.job_queue = Queue()
 
+        # Define the job status dictionary and its lock
+        self.job_status = {}
+        self.job_status_lock = Lock()
+
         # Define the shutdown flag
         self.shutdown_flag = False
 
@@ -36,9 +39,19 @@ class ThreadPool:
         if self.shutdown_flag:
             return False
         
-        # A job consists of a closure and an id
+        # Add the job to the job status dictionary as "running"
+        with self.job_status_lock:
+            self.job_status[job_id] = "running"
+
+        # Add the job to the job queue (a job consists of a closure and an id)
         self.job_queue.put((job, job_id))
         return True
+    
+    # Update the status of a job (called by the webserver when a job is completed)
+    def update_job_status(self, job_id, status):
+        # Update the job status in the job status dictionary
+        with self.job_status_lock:
+            self.job_status[job_id] = status
 
     # Graceful shutdown
     def shutdown(self):
@@ -61,6 +74,8 @@ class TaskRunner(Thread):
         self.job_queue = job_queue
 
     def run(self):
+        from app import webserver
+        
         while True:
             # Get pending job
             task = self.job_queue.get()
@@ -71,8 +86,11 @@ class TaskRunner(Thread):
 
             job, job_id = task
 
-            # Execute the job and save the result to disk
+            # Execute the job
             job()
+            
+            # Update job status to "done"
+            webserver.tasks_runner.update_job_status(job_id, "done")
 
             # Mark the job as done (decrement the queue's internal counter)
             self.job_queue.task_done()

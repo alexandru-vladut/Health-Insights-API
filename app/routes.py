@@ -58,28 +58,29 @@ def post_endpoint():
 @webserver.route('/api/get_results/<job_id>', methods=['GET'])
 def get_response(job_id):
     print(f"JobID is {job_id}")
-    # TODO
 
-    # Extract the job_id number
-    match = re.search(r'\d+$', job_id)
-    job_id_int = int(match.group())
-    
-    # Check if job_id is valid
-    if (job_id_int < 1 or job_id_int > webserver.job_counter):
-        return jsonify({"status": "error", "reason": "Invalid job_id"})
+    # Check if job_id is valid and get its status
+    with webserver.tasks_runner.job_status_lock:
+        if job_id not in webserver.tasks_runner.job_status:
+            return jsonify({"status": "error", "reason": "Invalid job_id"})
+
+        job_status = webserver.tasks_runner.job_status[job_id]
     
     # Define the path to the job's result file
     result_file_path = f"./results/{job_id}.json"
 
-    # Check if the job's result file exists
-    if not os.path.exists(result_file_path):
-        # If the file doesn't exist, the job is still running
+    # If the job is still running
+    if job_status == "running":
         return jsonify({"status": "running"})
 
-    # If the file exists, read file content and return it
-    with open(result_file_path, 'r') as file:
-        res = json.load(file)
-        return jsonify({"status": "done", "data": res})
+    # If the job is done, check if the file exists and return its content
+    if os.path.exists(result_file_path):
+        with open(result_file_path, 'r') as file:
+            res = json.load(file)
+            return jsonify({"status": "done", "data": res})
+        
+    # Handle the case where the job is done but the file does not exist
+    return jsonify({"status": "error", "reason": "Job completed, but result file is missing"})
 
 
 @webserver.route('/api/states_mean', methods=['POST'])
@@ -248,4 +249,15 @@ def graceful_shutdown_request():
     # Trigger the shutdown of the ThreadPool
     webserver.tasks_runner.shutdown()
 
+    # Return server status
     return jsonify({"status": "shutting down"})
+
+
+@webserver.route('/api/jobs', methods=['GET'])
+def jobs_request():
+    # Get the status of all jobs
+    with webserver.tasks_runner.job_status_lock:
+        jobs_data = [{"job_id": job_id, "status": status} for job_id, status in webserver.tasks_runner.job_status.items()]
+    
+    # Return the status of all jobs
+    return jsonify({"status": "done", "data": jobs_data})
