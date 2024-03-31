@@ -1,10 +1,13 @@
-from app import webserver
-from flask import request, jsonify
+"""
+This module defines the routes that the webserver will respond to.
+It also defines the logic for handling the requests.
+"""
 
 import os
 import json
-import re
-import app.request_methods as request_methods
+
+from flask import request, jsonify
+from app import webserver, request_methods
 
 
 def register_job(job_function, question, state=None):
@@ -23,7 +26,7 @@ def register_job(job_function, question, state=None):
             result = job_function(question)
 
         # Save the result in a JSON file
-        with open(f"results/{job_id}.json", "w") as file:
+        with open(f"results/{job_id}.json", "w", encoding='utf-8') as file:
             json.dump(result, file)
 
     # Add job to ThreadPool
@@ -32,9 +35,9 @@ def register_job(job_function, question, state=None):
     if add_job_successful:
         # Return associated job_id
         return jsonify({"job_id": job_id})
-    else:
-        # If the shutdown procedure has started, return an error
-        return jsonify({"status": "error", "reason": "Shutdown procedure has started"})
+    
+    # If the shutdown procedure has started, return an error
+    return jsonify({"job_id": -1, "reason": "shutting down"})
 
 
 # Example endpoint definition
@@ -51,9 +54,9 @@ def post_endpoint():
 
         # Sending back a JSON response
         return jsonify(response)
-    else:
-        # Method Not Allowed
-        return jsonify({"error": "Method not allowed"}), 405
+
+    # Method Not Allowed
+    return jsonify({"error": "Method not allowed"}), 405
 
 @webserver.route('/api/get_results/<job_id>', methods=['GET'])
 def get_response(job_id):
@@ -65,7 +68,7 @@ def get_response(job_id):
             return jsonify({"status": "error", "reason": "Invalid job_id"})
 
         job_status = webserver.tasks_runner.job_status[job_id]
-    
+
     # Define the path to the job's result file
     result_file_path = f"./results/{job_id}.json"
 
@@ -75,10 +78,10 @@ def get_response(job_id):
 
     # If the job is done, check if the file exists and return its content
     if os.path.exists(result_file_path):
-        with open(result_file_path, 'r') as file:
+        with open(result_file_path, 'r', encoding='utf-8') as file:
             res = json.load(file)
             return jsonify({"status": "done", "data": res})
-        
+
     # Handle the case where the job is done but the file does not exist
     return jsonify({"status": "error", "reason": "Job completed, but result file is missing"})
 
@@ -90,10 +93,10 @@ def states_mean_request():
     data = request.json
     print(f"Got request {data}")
     question = data.get('question')
-    
+
     # Register job. Don't wait for task to finish
     register_job_result = register_job(request_methods.states_mean, question)
-    
+
     # Return associated job_id or error message if shutdown procedure has started
     return register_job_result
 
@@ -106,7 +109,7 @@ def state_mean_request():
     print(f"Got request {data}")
     question = data.get('question')
     state = data.get('state')
-    
+
     # Register job. Don't wait for task to finish
     register_job_result = register_job(request_methods.state_mean, question, state)
 
@@ -116,7 +119,7 @@ def state_mean_request():
 
 @webserver.route('/api/best5', methods=['POST'])
 def best5_request():
-    
+
     # Get request data
     data = request.json
     print(f"Got request {data}")
@@ -131,7 +134,7 @@ def best5_request():
 
 @webserver.route('/api/worst5', methods=['POST'])
 def worst5_request():
-    
+
     # Get request data
     data = request.json
     print(f"Got request {data}")
@@ -146,12 +149,12 @@ def worst5_request():
 
 @webserver.route('/api/global_mean', methods=['POST'])
 def global_mean_request():
-    
+
     # Get request data
     data = request.json
     print(f"Got request {data}")
     question = data.get('question')
-    
+
     # Register job. Don't wait for task to finish
     register_job_result = register_job(request_methods.global_mean, question)
 
@@ -161,12 +164,12 @@ def global_mean_request():
 
 @webserver.route('/api/diff_from_mean', methods=['POST'])
 def diff_from_mean_request():
-    
+
     # Get request data
     data = request.json
     print(f"Got request {data}")
     question = data.get('question')
-    
+
     # Register job. Don't wait for task to finish
     register_job_result = register_job(request_methods.diff_from_mean, question)
 
@@ -182,7 +185,7 @@ def state_diff_from_mean_request():
     print(f"Got request {data}")
     question = data.get('question')
     state = data.get('state')
-    
+
     # Register job. Don't wait for task to finish
     register_job_result = register_job(request_methods.state_diff_from_mean, question, state)
 
@@ -197,7 +200,7 @@ def mean_by_category_request():
     data = request.json
     print(f"Got request {data}")
     question = data.get('question')
-    
+
     # Register job. Don't wait for task to finish
     register_job_result = register_job(request_methods.mean_by_category, question)
 
@@ -213,7 +216,7 @@ def state_mean_by_category_request():
     print(f"Got request {data}")
     question = data.get('question')
     state = data.get('state')
-    
+
     # Register job. Don't wait for task to finish
     register_job_result = register_job(request_methods.state_mean_by_category, question, state)
 
@@ -226,7 +229,7 @@ def state_mean_by_category_request():
 @webserver.route('/index')
 def index():
     routes = get_defined_routes()
-    msg = f"Hello, World!\n Interact with the webserver using one of the defined routes:\n"
+    msg = "Hello, World!\n Interact with the webserver using one of the defined routes:\n"
 
     # Display each route as a separate HTML <p> tag
     paragraphs = ""
@@ -257,8 +260,9 @@ def graceful_shutdown_request():
 def jobs_request():
     # Get the status of all jobs
     with webserver.tasks_runner.job_status_lock:
-        jobs_data = [{"job_id": job_id, "status": status} for job_id, status in webserver.tasks_runner.job_status.items()]
-    
+        jobs_data = [{"job_id": job_id, "status": status} for job_id, status in
+                     webserver.tasks_runner.job_status.items()]
+
     # Return the status of all jobs
     return jsonify({"status": "done", "data": jobs_data})
 
@@ -266,7 +270,8 @@ def jobs_request():
 def num_jobs_request():
     # Get the number of running jobs
     with webserver.tasks_runner.job_status_lock:
-        running_jobs = sum(status == "running" for status in webserver.tasks_runner.job_status.values())
+        running_jobs = sum(status == "running" for status in
+                           webserver.tasks_runner.job_status.values())
 
     # Return the number of running jobs
     return jsonify({"num_jobs": running_jobs})

@@ -1,17 +1,22 @@
-from app import webserver
-from flask import request, jsonify
+"""
+This module contains the methods that are called by the API endpoints.
+"""
 
 import pandas
 
+from app import webserver
+
 def states_mean(question):
     # Filter the DataFrame based on the question
-    df_filtered = webserver.data_ingestor.dataframe[webserver.data_ingestor.dataframe['Question'] == question]
+    df_filtered = webserver.data_ingestor.dataframe[
+        webserver.data_ingestor.dataframe['Question'] == question
+    ]
 
     # Calculate the average of "Data_Value" for each state
-    states_mean = df_filtered.groupby('LocationDesc')['Data_Value'].mean().sort_values()
+    result_df = df_filtered.groupby('LocationDesc')['Data_Value'].mean().sort_values()
 
     # Convert DataFrame to dictionary
-    result = states_mean.to_dict()
+    result = result_df.to_dict()
 
     # Return result dictionary
     return result
@@ -36,20 +41,21 @@ def state_mean(question, state):
 
 def best5(question):
     # Filter the DataFrame based on the question
-    df_filtered = webserver.data_ingestor.dataframe[webserver.data_ingestor.dataframe['Question'] == question]
+    df_filtered = webserver.data_ingestor.dataframe[
+        webserver.data_ingestor.dataframe['Question'] == question
+    ]
 
     if question in webserver.data_ingestor.questions_best_is_min:
         # Sort the DataFrame in ascending order
-        states_mean = df_filtered.groupby('LocationDesc')['Data_Value'].mean().sort_values(ascending=True)
+        result_df = (df_filtered.groupby('LocationDesc')['Data_Value']
+                       .mean().sort_values(ascending=True))
     else:
         # Sort the DataFrame in descending order
-        states_mean = df_filtered.groupby('LocationDesc')['Data_Value'].mean().sort_values(ascending=False)
+        result_df = (df_filtered.groupby('LocationDesc')['Data_Value']
+                       .mean().sort_values(ascending=False))
 
-    # Get the top 5 states
-    best5 = states_mean.head(5)
-
-    # Convert DataFrame to dictionary
-    result = best5.to_dict()
+    # Get the top 5 states and convert DataFrame to dictionary
+    result = result_df.head(5).to_dict()
 
     # Return result dictionary
     return result
@@ -57,20 +63,21 @@ def best5(question):
 
 def worst5(question):
     # Filter the DataFrame based on the question
-    df_filtered = webserver.data_ingestor.dataframe[webserver.data_ingestor.dataframe['Question'] == question]
+    df_filtered = webserver.data_ingestor.dataframe[
+        webserver.data_ingestor.dataframe['Question'] == question
+    ]
 
     if question in webserver.data_ingestor.questions_best_is_min:
         # Sort the DataFrame in ascending order
-        states_mean = df_filtered.groupby('LocationDesc')['Data_Value'].mean().sort_values(ascending=False)
+        result_df = (df_filtered.groupby('LocationDesc')['Data_Value']
+                       .mean().sort_values(ascending=False))
     else:
         # Sort the DataFrame in descending order
-        states_mean = df_filtered.groupby('LocationDesc')['Data_Value'].mean().sort_values(ascending=True)
+        result_df = (df_filtered.groupby('LocationDesc')['Data_Value']
+                       .mean().sort_values(ascending=True))
 
-    # Get the top 5 states
-    worst5 = states_mean.head(5)
-
-    # Convert DataFrame to dictionary
-    result = worst5.to_dict()
+    # Get the top 5 states and convert DataFrame to dictionary
+    result = result_df.head(5).to_dict()
 
     # Return result dictionary
     return result
@@ -133,15 +140,17 @@ def state_diff_from_mean(question, state):
 
 def mean_by_category(question):
     # Filter the DataFrame based on the question
-    df_filtered = webserver.data_ingestor.dataframe[(webserver.data_ingestor.dataframe['Question'] == question)]
-        # webserver.data_ingestor.dataframe['StratificationCategory1'].notna() &
-        # webserver.data_ingestor.dataframe['Stratification1'].notna()]
+    df_filtered = webserver.data_ingestor.dataframe[
+        (webserver.data_ingestor.dataframe['Question'] == question)
+    ]
 
     # Group by state, category, and interval, then calculate the mean
-    mean_by_category = df_filtered.groupby(['LocationDesc', 'StratificationCategory1', 'Stratification1'])['Data_Value'].mean()
+    categories = ['LocationDesc', 'StratificationCategory1', 'Stratification1']
+    result_df = df_filtered.groupby(categories)['Data_Value'].mean()
 
     # Convert group keys to string format and create the result dictionary
-    result = {f"('{state}', '{category}', '{interval}')": value for (state, category, interval), value in mean_by_category.items()}
+    result = {f"('{state}', '{category}', '{interval}')": value
+              for (state, category, interval), value in result_df.items()}
 
     # Return result dictionary
     return result
@@ -155,10 +164,12 @@ def state_mean_by_category(question, state):
     ]
 
     # Group by category and its interval, then calculate the mean
-    state_mean_by_category = df_filtered.groupby(['StratificationCategory1', 'Stratification1'])['Data_Value'].mean()
+    categories = ['StratificationCategory1', 'Stratification1']
+    result_df = df_filtered.groupby(categories)['Data_Value'].mean()
 
     # Convert group keys to string format and create the result dictionary
-    result = {state: {f"('{category}', '{interval}')": value for (category, interval), value in state_mean_by_category.items()}}
+    result = {state: {f"('{category}', '{interval}')": value
+                      for (category, interval), value in result_df.items()}}
 
     # Return result dictionary
     return result
