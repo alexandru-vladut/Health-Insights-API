@@ -1,9 +1,6 @@
 from app import webserver
 from flask import request, jsonify
 
-import os
-import json
-import re
 import pandas
 
 def states_mean(question):
@@ -165,4 +162,3 @@ def state_mean_by_category(question, state):
 
     # Return result dictionary
     return result
-

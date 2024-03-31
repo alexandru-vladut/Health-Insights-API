@@ -27,10 +27,14 @@ def register_job(job_function, question, state=None):
             json.dump(result, file)
 
     # Add job to ThreadPool
-    webserver.tasks_runner.add_job(job, job_id)
+    add_job_successful = webserver.tasks_runner.add_job(job, job_id)
 
-    # Return associated job_id
-    return job_id
+    if add_job_successful:
+        # Return associated job_id
+        return jsonify({"job_id": job_id})
+    else:
+        # If the shutdown procedure has started, return an error
+        return jsonify({"status": "error", "reason": "Shutdown procedure has started"})
 
 
 # Example endpoint definition
@@ -87,10 +91,10 @@ def states_mean_request():
     question = data.get('question')
     
     # Register job. Don't wait for task to finish
-    job_id = register_job(request_methods.states_mean, question)
-
-    # Return associated job_id
-    return jsonify({"job_id": job_id})
+    register_job_result = register_job(request_methods.states_mean, question)
+    
+    # Return associated job_id or error message if shutdown procedure has started
+    return register_job_result
 
 
 @webserver.route('/api/state_mean', methods=['POST'])
@@ -103,10 +107,10 @@ def state_mean_request():
     state = data.get('state')
     
     # Register job. Don't wait for task to finish
-    job_id = register_job(request_methods.state_mean, question, state)
+    register_job_result = register_job(request_methods.state_mean, question, state)
 
-    # Return associated job_id
-    return jsonify({"job_id": job_id})
+    # Return associated job_id or error message if shutdown procedure has started
+    return register_job_result
 
 
 @webserver.route('/api/best5', methods=['POST'])
@@ -118,10 +122,10 @@ def best5_request():
     question = data.get('question')
 
     # Register job. Don't wait for task to finish
-    job_id = register_job(request_methods.best5, question)
+    register_job_result = register_job(request_methods.best5, question)
 
-    # Return associated job_id
-    return jsonify({"job_id": job_id})
+    # Return associated job_id or error message if shutdown procedure has started
+    return register_job_result
 
 
 @webserver.route('/api/worst5', methods=['POST'])
@@ -133,10 +137,10 @@ def worst5_request():
     question = data.get('question')
 
     # Register job. Don't wait for task to finish
-    job_id = register_job(request_methods.worst5, question)
+    register_job_result = register_job(request_methods.worst5, question)
 
-    # Return associated job_id
-    return jsonify({"job_id": job_id})
+    # Return associated job_id or error message if shutdown procedure has started
+    return register_job_result
 
 
 @webserver.route('/api/global_mean', methods=['POST'])
@@ -148,10 +152,10 @@ def global_mean_request():
     question = data.get('question')
     
     # Register job. Don't wait for task to finish
-    job_id = register_job(request_methods.global_mean, question)
+    register_job_result = register_job(request_methods.global_mean, question)
 
-    # Return associated job_id
-    return jsonify({"job_id": job_id})
+    # Return associated job_id or error message if shutdown procedure has started
+    return register_job_result
 
 
 @webserver.route('/api/diff_from_mean', methods=['POST'])
@@ -163,10 +167,10 @@ def diff_from_mean_request():
     question = data.get('question')
     
     # Register job. Don't wait for task to finish
-    job_id = register_job(request_methods.diff_from_mean, question)
+    register_job_result = register_job(request_methods.diff_from_mean, question)
 
-    # Return associated job_id
-    return jsonify({"job_id": job_id})
+    # Return associated job_id or error message if shutdown procedure has started
+    return register_job_result
 
 
 @webserver.route('/api/state_diff_from_mean', methods=['POST'])
@@ -179,10 +183,10 @@ def state_diff_from_mean_request():
     state = data.get('state')
     
     # Register job. Don't wait for task to finish
-    job_id = register_job(request_methods.state_diff_from_mean, question, state)
+    register_job_result = register_job(request_methods.state_diff_from_mean, question, state)
 
-    # Return associated job_id
-    return jsonify({"job_id": job_id})
+    # Return associated job_id or error message if shutdown procedure has started
+    return register_job_result
 
 
 @webserver.route('/api/mean_by_category', methods=['POST'])
@@ -194,10 +198,10 @@ def mean_by_category_request():
     question = data.get('question')
     
     # Register job. Don't wait for task to finish
-    job_id = register_job(request_methods.mean_by_category, question)
+    register_job_result = register_job(request_methods.mean_by_category, question)
 
-    # Return associated job_id
-    return jsonify({"job_id": job_id})
+    # Return associated job_id or error message if shutdown procedure has started
+    return register_job_result
 
 
 @webserver.route('/api/state_mean_by_category', methods=['POST'])
@@ -210,10 +214,10 @@ def state_mean_by_category_request():
     state = data.get('state')
     
     # Register job. Don't wait for task to finish
-    job_id = register_job(request_methods.state_mean_by_category, question, state)
+    register_job_result = register_job(request_methods.state_mean_by_category, question, state)
 
-    # Return associated job_id
-    return jsonify({"job_id": job_id})
+    # Return associated job_id or error message if shutdown procedure has started
+    return register_job_result
 
 
 # You can check localhost in your browser to see what this displays
@@ -237,3 +241,11 @@ def get_defined_routes():
         methods = ', '.join(rule.methods)
         routes.append(f"Endpoint: \"{rule}\" Methods: \"{methods}\"")
     return routes
+
+
+@webserver.route('/api/graceful_shutdown', methods=['GET'])
+def graceful_shutdown_request():
+    # Trigger the shutdown of the ThreadPool
+    webserver.tasks_runner.shutdown()
+
+    return jsonify({"status": "shutting down"})
