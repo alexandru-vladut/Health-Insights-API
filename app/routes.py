@@ -3,6 +3,7 @@ from flask import request, jsonify
 
 import os
 import json
+import re
 
 # Example endpoint definition
 @webserver.route('/api/post_endpoint', methods=['POST'])
@@ -26,17 +27,28 @@ def post_endpoint():
 def get_response(job_id):
     print(f"JobID is {job_id}")
     # TODO
+
+    # Extract the job_id number
+    match = re.search(r'\d+$', job_id)
+    job_id_int = int(match.group())
+    
     # Check if job_id is valid
+    if (job_id_int < 1 or job_id_int > webserver.job_counter):
+        return jsonify({"status": "error", "reason": "Invalid job_id"})
+    
+    # Define the path to the job's result file
+    result_file_path = f"./results/{job_id}.json"
 
-    # Check if job_id is done and return the result
-    #    res = res_for(job_id)
-    #    return jsonify({
-    #        'status': 'done',
-    #        'data': res
-    #    })
+    # Check if the job's result file exists
+    if not os.path.exists(result_file_path):
+        # If the file doesn't exist, the job is still running
+        return jsonify({"status": "running"})
 
-    # If not, return running status
-    return jsonify({'status': 'NotImplemented'})
+    # If the file exists, read file content and return it
+    with open(result_file_path, 'r') as file:
+        res = json.load(file)
+        return jsonify({"status": "done", "data": res})
+
 
 @webserver.route('/api/states_mean', methods=['POST'])
 def states_mean_request():
@@ -54,12 +66,41 @@ def states_mean_request():
 @webserver.route('/api/state_mean', methods=['POST'])
 def state_mean_request():
     # TODO
-    # Get request data
-    # Register job. Don't wait for task to finish
-    # Increment job_id counter
-    # Return associated job_id
 
-    return jsonify({"status": "NotImplemented"})
+    # Get request data
+    data = request.json
+    print(f"Got request {data}")
+    question = data.get('question')
+    state = data.get('state')
+    
+    # Generate a unique job_id and increment the job_counter
+    # Use a Lock to ensure that the job_counter is only accessed by one thread at a time
+    with webserver.job_counter_lock:
+        job_id = "job_id_" + str(webserver.job_counter)
+        webserver.job_counter += 1
+
+    # Register job. Don't wait for task to finish
+    # Define a job closure
+    def job():
+        # Filter the DataFrame based on the question and state
+        df_filtered = webserver.data_ingestor.dataframe[
+            (webserver.data_ingestor.dataframe['Question'] == question) &
+            (webserver.data_ingestor.dataframe['LocationDesc'] == state)
+        ]
+
+        # Calculate the average value
+        average_value = df_filtered["Data_Value"].mean()
+
+        # Save the result in a JSON file
+        result = {state: average_value}
+        with open(f"./results/{job_id}.json", "w") as file:
+            json.dump(result, file)
+
+    # Add job to ThreadPool
+    webserver.tasks_runner.add_job(job, job_id)
+
+    # Return associated job_id
+    return jsonify({"job_id": job_id})
 
 
 @webserver.route('/api/best5', methods=['POST'])
