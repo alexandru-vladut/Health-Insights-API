@@ -149,11 +149,36 @@ def worst5_request():
 def global_mean_request():
     # TODO
     # Get request data
-    # Register job. Don't wait for task to finish
-    # Increment job_id counter
-    # Return associated job_id
+    data = request.json
+    print(f"Got request {data}")
+    question = data.get('question')
+    
+    # Generate a unique job_id and increment the job_counter
+    # Use a Lock to ensure that the job_counter is only accessed by one thread at a time
+    with webserver.job_counter_lock:
+        job_id = "job_id_" + str(webserver.job_counter)
+        webserver.job_counter += 1
 
-    return jsonify({"status": "NotImplemented"})
+    # Register job. Don't wait for task to finish
+    # Define a job closure
+    def job():
+        # Filter the DataFrame based on the question
+        df_filtered = webserver.data_ingestor.dataframe[
+            (webserver.data_ingestor.dataframe['Question'] == question)]
+
+        # Calculate the average value
+        average_value = df_filtered["Data_Value"].mean()
+
+        # Save the result in a JSON file
+        result = {"global_mean": average_value}
+        with open(f"./results/{job_id}.json", "w") as file:
+            json.dump(result, file)
+
+    # Add job to ThreadPool
+    webserver.tasks_runner.add_job(job, job_id)
+
+    # Return associated job_id
+    return jsonify({"job_id": job_id})
 
 @webserver.route('/api/diff_from_mean', methods=['POST'])
 def diff_from_mean_request():
