@@ -282,13 +282,35 @@ def mean_by_category_request():
 
 @webserver.route('/api/state_mean_by_category', methods=['POST'])
 def state_mean_by_category_request():
-    # TODO
-    # Get request data
-    # Register job. Don't wait for task to finish
-    # Increment job_id counter
-    # Return associated job_id
 
-    return jsonify({"status": "NotImplemented"})
+    # Get request data
+    data = request.json
+    print(f"Got request {data}")
+    question = data.get('question')
+    state = data.get('state')
+    
+    # Generate a unique job_id and increment the job_counter
+    # Use a Lock to ensure that the job_counter is only accessed by one thread at a time
+    with webserver.job_counter_lock:
+        job_id = "job_id_" + str(webserver.job_counter)
+        webserver.job_counter += 1
+
+    # Register job. Don't wait for task to finish
+    # Define a job closure
+    def job():
+        # Execute job
+        result = request_methods.state_mean_by_category(question, state)
+
+        # Save the result in a JSON file
+        with open(f"./results/{job_id}.json", "w") as file:
+            json.dump(result, file)
+
+    # Add job to ThreadPool
+    webserver.tasks_runner.add_job(job, job_id)
+
+    # Return associated job_id
+    return jsonify({"job_id": job_id})
+
 
 # You can check localhost in your browser to see what this displays
 @webserver.route('/')

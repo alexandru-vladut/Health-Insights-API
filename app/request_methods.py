@@ -133,3 +133,19 @@ def state_diff_from_mean(question, state):
     # Return result dictionary
     return result
 
+
+def state_mean_by_category(question, state):
+    # Filter the DataFrame based on the question and state
+    df_filtered = webserver.data_ingestor.dataframe[
+        (webserver.data_ingestor.dataframe['Question'] == question) &
+        (webserver.data_ingestor.dataframe['LocationDesc'] == state)
+    ]
+
+    # Group by category and its interval, then calculate the mean
+    state_mean_by_category = df_filtered.groupby(['StratificationCategory1', 'Stratification1'])['Data_Value'].mean()
+
+    # Convert to a dictionary in the desired format
+    result = {state: {f"('{category}', '{interval}')": value for (category, interval), value in state_mean_by_category.items()}}
+
+    return result
+
