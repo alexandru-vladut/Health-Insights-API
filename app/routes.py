@@ -52,16 +52,38 @@ def get_response(job_id):
 
 @webserver.route('/api/states_mean', methods=['POST'])
 def states_mean_request():
+
     # Get request data
     data = request.json
     print(f"Got request {data}")
+    question = data.get('question')
 
-    # TODO
+    # Generate a unique job_id and increment the job_counter
+    # Use a Lock to ensure that the job_counter is only accessed by one thread at a time
+    with webserver.job_counter_lock:
+        job_id = "job_id_" + str(webserver.job_counter)
+        webserver.job_counter += 1
+
     # Register job. Don't wait for task to finish
-    # Increment job_id counter
-    # Return associated job_id
+    # Define a job closure
+    def job():
+        # Filter the DataFrame based on the question
+        df_filtered = webserver.data_ingestor.dataframe[
+            webserver.data_ingestor.dataframe['Question'] == question]
 
-    return jsonify({"status": "NotImplemented"})
+        # Calculate the average of "Data_Value" for each state
+        states_mean = df_filtered.groupby('LocationDesc')['Data_Value'].mean().sort_values()
+
+        # Convert DataFrame to dictionary and save in JSON file
+        result = states_mean.to_dict()
+        with open(f"results/{job_id}.json", "w") as file:
+            json.dump(result, file)
+
+    # Add job to ThreadPool
+    webserver.tasks_runner.add_job(job, job_id)
+
+    # Return associated job_id
+    return jsonify({"job_id": job_id})
 
 @webserver.route('/api/state_mean', methods=['POST'])
 def state_mean_request():
