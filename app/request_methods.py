@@ -8,8 +8,7 @@ import pandas
 
 def states_mean(question):
     # Filter the DataFrame based on the question
-    df_filtered = webserver.data_ingestor.dataframe[
-        webserver.data_ingestor.dataframe['Question'] == question]
+    df_filtered = webserver.data_ingestor.dataframe[webserver.data_ingestor.dataframe['Question'] == question]
 
     # Calculate the average of "Data_Value" for each state
     states_mean = df_filtered.groupby('LocationDesc')['Data_Value'].mean().sort_values()
@@ -33,6 +32,48 @@ def state_mean(question, state):
 
     # Create result dictionary
     result = {state: average_value}
+
+    # Return result dictionary
+    return result
+
+
+def best5(question):
+    # Filter the DataFrame based on the question
+    df_filtered = webserver.data_ingestor.dataframe[webserver.data_ingestor.dataframe['Question'] == question]
+
+    if question in webserver.data_ingestor.questions_best_is_min:
+        # Sort the DataFrame in ascending order
+        states_mean = df_filtered.groupby('LocationDesc')['Data_Value'].mean().sort_values(ascending=True)
+    else:
+        # Sort the DataFrame in descending order
+        states_mean = df_filtered.groupby('LocationDesc')['Data_Value'].mean().sort_values(ascending=False)
+
+    # Get the top 5 states
+    best5 = states_mean.head(5)
+
+    # Convert DataFrame to dictionary
+    result = best5.to_dict()
+
+    # Return result dictionary
+    return result
+
+
+def worst5(question):
+    # Filter the DataFrame based on the question
+    df_filtered = webserver.data_ingestor.dataframe[webserver.data_ingestor.dataframe['Question'] == question]
+
+    if question in webserver.data_ingestor.questions_best_is_min:
+        # Sort the DataFrame in ascending order
+        states_mean = df_filtered.groupby('LocationDesc')['Data_Value'].mean().sort_values(ascending=False)
+    else:
+        # Sort the DataFrame in descending order
+        states_mean = df_filtered.groupby('LocationDesc')['Data_Value'].mean().sort_values(ascending=True)
+
+    # Get the top 5 states
+    worst5 = states_mean.head(5)
+
+    # Convert DataFrame to dictionary
+    result = worst5.to_dict()
 
     # Return result dictionary
     return result
