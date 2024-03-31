@@ -6,6 +6,33 @@ import json
 import re
 import app.request_methods as request_methods
 
+
+def register_job(job_function, question, state=None):
+    # Generate a unique job_id and increment the job_counter
+    # Use a Lock to ensure that the job_counter is only accessed by one thread at a time
+    with webserver.job_counter_lock:
+        job_id = f"job_id_{webserver.job_counter}"
+        webserver.job_counter += 1
+
+    # Define a job closure
+    def job():
+        # Execute job
+        if state is not None:
+            result = job_function(question, state)
+        else:
+            result = job_function(question)
+
+        # Save the result in a JSON file
+        with open(f"results/{job_id}.json", "w") as file:
+            json.dump(result, file)
+
+    # Add job to ThreadPool
+    webserver.tasks_runner.add_job(job, job_id)
+
+    # Return associated job_id
+    return job_id
+
+
 # Example endpoint definition
 @webserver.route('/api/post_endpoint', methods=['POST'])
 def post_endpoint():
@@ -58,25 +85,9 @@ def states_mean_request():
     data = request.json
     print(f"Got request {data}")
     question = data.get('question')
-
-    # Generate a unique job_id and increment the job_counter
-    # Use a Lock to ensure that the job_counter is only accessed by one thread at a time
-    with webserver.job_counter_lock:
-        job_id = "job_id_" + str(webserver.job_counter)
-        webserver.job_counter += 1
-
+    
     # Register job. Don't wait for task to finish
-    # Define a job closure
-    def job():
-        # Execute job
-        result = request_methods.states_mean(question)
-
-        # Save the result in a JSON file
-        with open(f"results/{job_id}.json", "w") as file:
-            json.dump(result, file)
-
-    # Add job to ThreadPool
-    webserver.tasks_runner.add_job(job, job_id)
+    job_id = register_job(request_methods.states_mean, question)
 
     # Return associated job_id
     return jsonify({"job_id": job_id})
@@ -91,24 +102,8 @@ def state_mean_request():
     question = data.get('question')
     state = data.get('state')
     
-    # Generate a unique job_id and increment the job_counter
-    # Use a Lock to ensure that the job_counter is only accessed by one thread at a time
-    with webserver.job_counter_lock:
-        job_id = "job_id_" + str(webserver.job_counter)
-        webserver.job_counter += 1
-
     # Register job. Don't wait for task to finish
-    # Define a job closure
-    def job():
-        # Execute job
-        result = request_methods.state_mean(question, state)
-
-        # Save the result in a JSON file
-        with open(f"./results/{job_id}.json", "w") as file:
-            json.dump(result, file)
-
-    # Add job to ThreadPool
-    webserver.tasks_runner.add_job(job, job_id)
+    job_id = register_job(request_methods.state_mean, question, state)
 
     # Return associated job_id
     return jsonify({"job_id": job_id})
@@ -122,24 +117,8 @@ def best5_request():
     print(f"Got request {data}")
     question = data.get('question')
 
-    # Generate a unique job_id and increment the job_counter
-    # Use a Lock to ensure that the job_counter is only accessed by one thread at a time
-    with webserver.job_counter_lock:
-        job_id = "job_id_" + str(webserver.job_counter)
-        webserver.job_counter += 1
-
     # Register job. Don't wait for task to finish
-    # Define a job closure
-    def job():
-        # Execute job
-        result = request_methods.best5(question)
-
-        # Save the result in a JSON file
-        with open(f"results/{job_id}.json", "w") as file:
-            json.dump(result, file)
-
-    # Add job to ThreadPool
-    webserver.tasks_runner.add_job(job, job_id)
+    job_id = register_job(request_methods.best5, question)
 
     # Return associated job_id
     return jsonify({"job_id": job_id})
@@ -153,24 +132,8 @@ def worst5_request():
     print(f"Got request {data}")
     question = data.get('question')
 
-    # Generate a unique job_id and increment the job_counter
-    # Use a Lock to ensure that the job_counter is only accessed by one thread at a time
-    with webserver.job_counter_lock:
-        job_id = "job_id_" + str(webserver.job_counter)
-        webserver.job_counter += 1
-
     # Register job. Don't wait for task to finish
-    # Define a job closure
-    def job():
-        # Execute job
-        result = request_methods.worst5(question)
-
-        # Save the result in a JSON file
-        with open(f"results/{job_id}.json", "w") as file:
-            json.dump(result, file)
-
-    # Add job to ThreadPool
-    webserver.tasks_runner.add_job(job, job_id)
+    job_id = register_job(request_methods.worst5, question)
 
     # Return associated job_id
     return jsonify({"job_id": job_id})
@@ -184,24 +147,8 @@ def global_mean_request():
     print(f"Got request {data}")
     question = data.get('question')
     
-    # Generate a unique job_id and increment the job_counter
-    # Use a Lock to ensure that the job_counter is only accessed by one thread at a time
-    with webserver.job_counter_lock:
-        job_id = "job_id_" + str(webserver.job_counter)
-        webserver.job_counter += 1
-
     # Register job. Don't wait for task to finish
-    # Define a job closure
-    def job():
-        # Execute job
-        result = request_methods.global_mean(question)
-
-        # Save the result in a JSON file
-        with open(f"./results/{job_id}.json", "w") as file:
-            json.dump(result, file)
-
-    # Add job to ThreadPool
-    webserver.tasks_runner.add_job(job, job_id)
+    job_id = register_job(request_methods.global_mean, question)
 
     # Return associated job_id
     return jsonify({"job_id": job_id})
@@ -215,24 +162,8 @@ def diff_from_mean_request():
     print(f"Got request {data}")
     question = data.get('question')
     
-    # Generate a unique job_id and increment the job_counter
-    # Use a Lock to ensure that the job_counter is only accessed by one thread at a time
-    with webserver.job_counter_lock:
-        job_id = "job_id_" + str(webserver.job_counter)
-        webserver.job_counter += 1
-
     # Register job. Don't wait for task to finish
-    # Define a job closure
-    def job():
-        # Execute job
-        result = request_methods.diff_from_mean(question)
-
-        # Save the result in a JSON file
-        with open(f"./results/{job_id}.json", "w") as file:
-            json.dump(result, file)
-
-    # Add job to ThreadPool
-    webserver.tasks_runner.add_job(job, job_id)
+    job_id = register_job(request_methods.diff_from_mean, question)
 
     # Return associated job_id
     return jsonify({"job_id": job_id})
@@ -247,24 +178,8 @@ def state_diff_from_mean_request():
     question = data.get('question')
     state = data.get('state')
     
-    # Generate a unique job_id and increment the job_counter
-    # Use a Lock to ensure that the job_counter is only accessed by one thread at a time
-    with webserver.job_counter_lock:
-        job_id = "job_id_" + str(webserver.job_counter)
-        webserver.job_counter += 1
-
     # Register job. Don't wait for task to finish
-    # Define a job closure
-    def job():
-        # Execute job
-        result = request_methods.state_diff_from_mean(question, state)
-
-        # Save the result in a JSON file
-        with open(f"./results/{job_id}.json", "w") as file:
-            json.dump(result, file)
-
-    # Add job to ThreadPool
-    webserver.tasks_runner.add_job(job, job_id)
+    job_id = register_job(request_methods.state_diff_from_mean, question, state)
 
     # Return associated job_id
     return jsonify({"job_id": job_id})
@@ -277,26 +192,9 @@ def mean_by_category_request():
     data = request.json
     print(f"Got request {data}")
     question = data.get('question')
-    state = data.get('state')
     
-    # Generate a unique job_id and increment the job_counter
-    # Use a Lock to ensure that the job_counter is only accessed by one thread at a time
-    with webserver.job_counter_lock:
-        job_id = "job_id_" + str(webserver.job_counter)
-        webserver.job_counter += 1
-
     # Register job. Don't wait for task to finish
-    # Define a job closure
-    def job():
-        # Execute job
-        result = request_methods.mean_by_category(question)
-
-        # Save the result in a JSON file
-        with open(f"./results/{job_id}.json", "w") as file:
-            json.dump(result, file)
-
-    # Add job to ThreadPool
-    webserver.tasks_runner.add_job(job, job_id)
+    job_id = register_job(request_methods.mean_by_category, question)
 
     # Return associated job_id
     return jsonify({"job_id": job_id})
@@ -311,24 +209,8 @@ def state_mean_by_category_request():
     question = data.get('question')
     state = data.get('state')
     
-    # Generate a unique job_id and increment the job_counter
-    # Use a Lock to ensure that the job_counter is only accessed by one thread at a time
-    with webserver.job_counter_lock:
-        job_id = "job_id_" + str(webserver.job_counter)
-        webserver.job_counter += 1
-
     # Register job. Don't wait for task to finish
-    # Define a job closure
-    def job():
-        # Execute job
-        result = request_methods.state_mean_by_category(question, state)
-
-        # Save the result in a JSON file
-        with open(f"./results/{job_id}.json", "w") as file:
-            json.dump(result, file)
-
-    # Add job to ThreadPool
-    webserver.tasks_runner.add_job(job, job_id)
+    job_id = register_job(request_methods.state_mean_by_category, question, state)
 
     # Return associated job_id
     return jsonify({"job_id": job_id})
