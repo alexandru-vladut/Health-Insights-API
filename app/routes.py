@@ -4,6 +4,7 @@ from flask import request, jsonify
 import os
 import json
 import re
+import app.request_methods as request_methods
 
 # Example endpoint definition
 @webserver.route('/api/post_endpoint', methods=['POST'])
@@ -67,15 +68,10 @@ def states_mean_request():
     # Register job. Don't wait for task to finish
     # Define a job closure
     def job():
-        # Filter the DataFrame based on the question
-        df_filtered = webserver.data_ingestor.dataframe[
-            webserver.data_ingestor.dataframe['Question'] == question]
+        # Execute job
+        result = request_methods.states_mean(question)
 
-        # Calculate the average of "Data_Value" for each state
-        states_mean = df_filtered.groupby('LocationDesc')['Data_Value'].mean().sort_values()
-
-        # Convert DataFrame to dictionary and save in JSON file
-        result = states_mean.to_dict()
+        # Save the result in a JSON file
         with open(f"results/{job_id}.json", "w") as file:
             json.dump(result, file)
 
@@ -85,9 +81,9 @@ def states_mean_request():
     # Return associated job_id
     return jsonify({"job_id": job_id})
 
+
 @webserver.route('/api/state_mean', methods=['POST'])
 def state_mean_request():
-    # TODO
 
     # Get request data
     data = request.json
@@ -104,17 +100,10 @@ def state_mean_request():
     # Register job. Don't wait for task to finish
     # Define a job closure
     def job():
-        # Filter the DataFrame based on the question and state
-        df_filtered = webserver.data_ingestor.dataframe[
-            (webserver.data_ingestor.dataframe['Question'] == question) &
-            (webserver.data_ingestor.dataframe['LocationDesc'] == state)
-        ]
-
-        # Calculate the average value
-        average_value = df_filtered["Data_Value"].mean()
+        # Execute job
+        result = request_methods.state_mean(question, state)
 
         # Save the result in a JSON file
-        result = {state: average_value}
         with open(f"./results/{job_id}.json", "w") as file:
             json.dump(result, file)
 
@@ -147,7 +136,7 @@ def worst5_request():
 
 @webserver.route('/api/global_mean', methods=['POST'])
 def global_mean_request():
-    # TODO
+    
     # Get request data
     data = request.json
     print(f"Got request {data}")
@@ -162,15 +151,10 @@ def global_mean_request():
     # Register job. Don't wait for task to finish
     # Define a job closure
     def job():
-        # Filter the DataFrame based on the question
-        df_filtered = webserver.data_ingestor.dataframe[
-            (webserver.data_ingestor.dataframe['Question'] == question)]
-
-        # Calculate the average value
-        average_value = df_filtered["Data_Value"].mean()
+        # Execute job
+        result = request_methods.global_mean(question)
 
         # Save the result in a JSON file
-        result = {"global_mean": average_value}
         with open(f"./results/{job_id}.json", "w") as file:
             json.dump(result, file)
 
@@ -180,15 +164,37 @@ def global_mean_request():
     # Return associated job_id
     return jsonify({"job_id": job_id})
 
+
 @webserver.route('/api/diff_from_mean', methods=['POST'])
 def diff_from_mean_request():
-    # TODO
+    
     # Get request data
-    # Register job. Don't wait for task to finish
-    # Increment job_id counter
-    # Return associated job_id
+    data = request.json
+    print(f"Got request {data}")
+    question = data.get('question')
+    
+    # Generate a unique job_id and increment the job_counter
+    # Use a Lock to ensure that the job_counter is only accessed by one thread at a time
+    with webserver.job_counter_lock:
+        job_id = "job_id_" + str(webserver.job_counter)
+        webserver.job_counter += 1
 
-    return jsonify({"status": "NotImplemented"})
+    # Register job. Don't wait for task to finish
+    # Define a job closure
+    def job():
+        # Execute job
+        result = request_methods.diff_from_mean(question)
+
+        # Save the result in a JSON file
+        with open(f"./results/{job_id}.json", "w") as file:
+            json.dump(result, file)
+
+    # Add job to ThreadPool
+    webserver.tasks_runner.add_job(job, job_id)
+
+    # Return associated job_id
+    return jsonify({"job_id": job_id})
+
 
 @webserver.route('/api/state_diff_from_mean', methods=['POST'])
 def state_diff_from_mean_request():
