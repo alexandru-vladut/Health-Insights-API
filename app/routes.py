@@ -261,3 +261,12 @@ def jobs_request():
     
     # Return the status of all jobs
     return jsonify({"status": "done", "data": jobs_data})
+
+@webserver.route('/api/num_jobs', methods=['GET'])
+def num_jobs_request():
+    # Get the number of running jobs
+    with webserver.tasks_runner.job_status_lock:
+        running_jobs = sum(status == "running" for status in webserver.tasks_runner.job_status.values())
+
+    # Return the number of running jobs
+    return jsonify({"num_jobs": running_jobs})
