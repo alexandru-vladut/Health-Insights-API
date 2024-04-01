@@ -35,7 +35,7 @@ def register_job(job_function, question, state=None):
     if add_job_successful:
         # Return associated job_id
         return jsonify({"job_id": job_id})
-    
+
     # If the shutdown procedure has started, return an error
     return jsonify({"job_id": -1, "reason": "shutting down"})
 
@@ -232,9 +232,7 @@ def index():
     msg = "Hello, World!\n Interact with the webserver using one of the defined routes:\n"
 
     # Display each route as a separate HTML <p> tag
-    paragraphs = ""
-    for route in routes:
-        paragraphs += f"<p>{route}</p>"
+    paragraphs = "".join([f"<p>{route}</p>" for route in routes])
 
     msg += paragraphs
     return msg
