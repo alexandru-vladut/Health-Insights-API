@@ -11,6 +11,10 @@ from app import webserver, request_methods
 
 
 def register_job(job_function, question, state=None):
+    """
+    Registers a job in the ThreadPool and returns the associated job_id.
+    """
+
     # Generate a unique job_id and increment the job_counter
     # Use a Lock to ensure that the job_counter is only accessed by one thread at a time
     with webserver.job_counter_lock:
@@ -40,9 +44,12 @@ def register_job(job_function, question, state=None):
     return jsonify({"job_id": -1, "reason": "shutting down"})
 
 
-# Example endpoint definition
 @webserver.route('/api/post_endpoint', methods=['POST'])
 def post_endpoint():
+    """
+    Example POST endpoint that receives JSON data and returns a JSON response.
+    """
+
     if request.method == 'POST':
         # Assuming the request contains JSON data
         data = request.json
@@ -60,6 +67,10 @@ def post_endpoint():
 
 @webserver.route('/api/get_results/<job_id>', methods=['GET'])
 def get_response(job_id):
+    """
+    Get the result of a job based on the job_id.
+    """
+
     print(f"JobID is {job_id}")
 
     # Check if job_id is valid and get its status
@@ -88,6 +99,9 @@ def get_response(job_id):
 
 @webserver.route('/api/states_mean', methods=['POST'])
 def states_mean_request():
+    """
+    Handle the states_mean request.
+    """
 
     # Get request data
     data = request.json
@@ -103,6 +117,9 @@ def states_mean_request():
 
 @webserver.route('/api/state_mean', methods=['POST'])
 def state_mean_request():
+    """
+    Handle the state_mean request.
+    """
 
     # Get request data
     data = request.json
@@ -119,6 +136,9 @@ def state_mean_request():
 
 @webserver.route('/api/best5', methods=['POST'])
 def best5_request():
+    """
+    Handle the best5 request.
+    """
 
     # Get request data
     data = request.json
@@ -134,6 +154,9 @@ def best5_request():
 
 @webserver.route('/api/worst5', methods=['POST'])
 def worst5_request():
+    """
+    Handle the worst5 request.
+    """
 
     # Get request data
     data = request.json
@@ -149,6 +172,9 @@ def worst5_request():
 
 @webserver.route('/api/global_mean', methods=['POST'])
 def global_mean_request():
+    """
+    Handle the global_mean request.
+    """
 
     # Get request data
     data = request.json
@@ -164,6 +190,9 @@ def global_mean_request():
 
 @webserver.route('/api/diff_from_mean', methods=['POST'])
 def diff_from_mean_request():
+    """
+    Handle the diff_from_mean request.
+    """
 
     # Get request data
     data = request.json
@@ -179,6 +208,9 @@ def diff_from_mean_request():
 
 @webserver.route('/api/state_diff_from_mean', methods=['POST'])
 def state_diff_from_mean_request():
+    """
+    Handle the state_diff_from_mean request.
+    """
 
     # Get request data
     data = request.json
@@ -195,6 +227,9 @@ def state_diff_from_mean_request():
 
 @webserver.route('/api/mean_by_category', methods=['POST'])
 def mean_by_category_request():
+    """
+    Handle the mean_by_category request.
+    """
 
     # Get request data
     data = request.json
@@ -210,6 +245,9 @@ def mean_by_category_request():
 
 @webserver.route('/api/state_mean_by_category', methods=['POST'])
 def state_mean_by_category_request():
+    """
+    Handle the state_mean_by_category request.
+    """
 
     # Get request data
     data = request.json
@@ -228,16 +266,23 @@ def state_mean_by_category_request():
 @webserver.route('/')
 @webserver.route('/index')
 def index():
+    """
+    Display the available routes when accessing the root URL.
+    """
+
     routes = get_defined_routes()
     msg = "Hello, World!\n Interact with the webserver using one of the defined routes:\n"
 
     # Display each route as a separate HTML <p> tag
     paragraphs = "".join([f"<p>{route}</p>" for route in routes])
-
     msg += paragraphs
     return msg
 
 def get_defined_routes():
+    """
+    Get the defined routes in the webserver.
+    """
+
     routes = []
     for rule in webserver.url_map.iter_rules():
         methods = ', '.join(rule.methods)
@@ -247,6 +292,10 @@ def get_defined_routes():
 
 @webserver.route('/api/graceful_shutdown', methods=['GET'])
 def graceful_shutdown_request():
+    """
+    Handle the graceful_shutdown request.
+    """
+
     # Trigger the shutdown of the ThreadPool
     webserver.tasks_runner.shutdown()
 
@@ -256,16 +305,23 @@ def graceful_shutdown_request():
 
 @webserver.route('/api/jobs', methods=['GET'])
 def jobs_request():
+    """
+    Handle the jobs request.
+    """
+
     # Get the status of all jobs
     with webserver.tasks_runner.job_status_lock:
         jobs_data = [{"job_id": job_id, "status": status} for job_id, status in
                      webserver.tasks_runner.job_status.items()]
-
     # Return the status of all jobs
     return jsonify({"status": "done", "data": jobs_data})
 
 @webserver.route('/api/num_jobs', methods=['GET'])
 def num_jobs_request():
+    """
+    Handle the num_jobs request.
+    """
+
     # Get the number of running jobs
     with webserver.tasks_runner.job_status_lock:
         running_jobs = sum(status == "running" for status in
