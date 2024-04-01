@@ -18,3 +18,5 @@ webserver.job_counter = 1
 # Define a lock for managing concurrent access to the job_counter, both when
 # reading (assigning a job_id to a new request) and writing (incrementing the job_counter).
 webserver.job_counter_lock = Lock()
+
+from app import routes
