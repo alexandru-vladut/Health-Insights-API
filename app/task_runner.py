@@ -8,6 +8,23 @@ from queue import Queue
 from threading import Thread, Lock
 
 class ThreadPool:
+    """
+    A class representing a thread pool.
+
+    Attributes:
+    - job_queue (Queue): A queue to store the jobs to be executed.
+    - job_status (dict): A dictionary to store the status of each job.
+    - job_status_lock (Lock): A lock to synchronize access to the job_status dictionary.
+    - shutdown_flag (bool): A flag indicating whether the shutdown procedure has started.
+    - workers (list): A list of TaskRunner instances representing the worker threads.
+
+    Methods:
+    - __init__(): Initializes the ThreadPool instance.
+    - add_job(job, job_id): Adds a job to the job queue.
+    - update_job_status(job_id, status): Updates the status of a job.
+    - shutdown(): Initiates a graceful shutdown of the thread pool.
+    """
+
     def __init__(self):
         # Define the number of threads to be used by the thread pool
         num_threads = int(os.getenv('TP_NUM_OF_THREADS', os.cpu_count()))
@@ -29,8 +46,12 @@ class ThreadPool:
         for worker in self.workers:
             worker.start()
 
-    # Add a job to the queue (called by the webserver when a new reqquest is made)
+
     def add_job(self, job, job_id):
+        """
+        Add a job to the queue (called by the webserver when a new reqquest is made)
+        """
+
         # If the shutdown procedure has started, do not add any more jobs
         if self.shutdown_flag:
             return False
@@ -43,14 +64,22 @@ class ThreadPool:
         self.job_queue.put((job, job_id))
         return True
 
-    # Update the status of a job (called by the webserver when a job is completed)
+
     def update_job_status(self, job_id, status):
+        """
+        Update the status of a job (called by the webserver when a job is completed)
+        """
+
         # Update the job status in the job status dictionary
         with self.job_status_lock:
             self.job_status[job_id] = status
 
-    # Graceful shutdown
+
     def shutdown(self):
+        """
+        Graceful shutdown
+        """
+
         # Mark the start of the shutdown procedure
         self.shutdown_flag = True
 
@@ -64,6 +93,17 @@ class ThreadPool:
 
 
 class TaskRunner(Thread):
+    """
+    A class representing a worker thread that executes jobs from the job queue.
+
+    Attributes:
+    - job_queue (Queue): A queue to store the jobs to be executed.
+
+    Methods:
+    - __init__(job_queue): Initializes the TaskRunner instance.
+    - run(): The main function of the worker thread.
+    """
+
     def __init__(self, job_queue):
         # init necessary data structures
         super().__init__()
