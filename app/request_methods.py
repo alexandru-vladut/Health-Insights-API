@@ -7,6 +7,10 @@ import pandas
 from app import webserver
 
 def states_mean(question):
+    """
+    Calculate the mean value of the data for each state for a given question.
+    """
+
     # Filter the DataFrame based on the question
     df_filtered = webserver.data_ingestor.dataframe[
         webserver.data_ingestor.dataframe['Question'] == question
@@ -23,6 +27,10 @@ def states_mean(question):
 
 
 def state_mean(question, state):
+    """
+    Calculate the mean value of the data for a given question and state.
+    """
+
     # Filter the DataFrame based on the question and state
     df_filtered = webserver.data_ingestor.dataframe[
         (webserver.data_ingestor.dataframe['Question'] == question) &
@@ -40,6 +48,10 @@ def state_mean(question, state):
 
 
 def best5(question):
+    """
+    Get the top 5 states with the best values for a given question.
+    """
+
     # Filter the DataFrame based on the question
     df_filtered = webserver.data_ingestor.dataframe[
         webserver.data_ingestor.dataframe['Question'] == question
@@ -62,6 +74,10 @@ def best5(question):
 
 
 def worst5(question):
+    """
+    Get the top 5 states with the worst values for a given question.
+    """
+
     # Filter the DataFrame based on the question
     df_filtered = webserver.data_ingestor.dataframe[
         webserver.data_ingestor.dataframe['Question'] == question
@@ -84,6 +100,10 @@ def worst5(question):
 
 
 def global_mean(question):
+    """
+    Calculate the global mean value of the data for a given question.
+    """
+
     # Filter the DataFrame based on the question
     df_filtered = webserver.data_ingestor.dataframe[
         (webserver.data_ingestor.dataframe['Question'] == question)]
@@ -99,6 +119,11 @@ def global_mean(question):
 
 
 def diff_from_mean(question):
+    """
+    Calculate the difference between the global mean value and
+    the mean value of each state for a given question.
+    """
+
     # Get the list of states
     states = webserver.data_ingestor.dataframe['LocationDesc'].unique().tolist()
 
@@ -122,6 +147,10 @@ def diff_from_mean(question):
 
 
 def state_diff_from_mean(question, state):
+    """
+    Calculate the difference between the global mean value and
+    the mean value of a given state for a given question.
+    """
     # Get the global mean value
     global_mean_value = global_mean(question)["global_mean"]
 
@@ -139,6 +168,11 @@ def state_diff_from_mean(question, state):
 
 
 def mean_by_category(question):
+    """
+    Calculate the mean value of the data for each state,
+    category, and interval for a given question.
+    """
+
     # Filter the DataFrame based on the question
     df_filtered = webserver.data_ingestor.dataframe[
         (webserver.data_ingestor.dataframe['Question'] == question)
@@ -157,6 +191,10 @@ def mean_by_category(question):
 
 
 def state_mean_by_category(question, state):
+    """
+    Calculate the mean value of the data for each category and interval
+    for a given question and state.
+    """
     # Filter the DataFrame based on the question and state
     df_filtered = webserver.data_ingestor.dataframe[
         (webserver.data_ingestor.dataframe['Question'] == question) &
