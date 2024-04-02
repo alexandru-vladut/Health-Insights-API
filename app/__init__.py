@@ -3,7 +3,6 @@ This module initializes the Flask application and sets up the global variables
 that will be used throughout the application.
 """
 
-from threading import Lock
 from flask import Flask
 from app.task_runner import ThreadPool
 from app.data_ingestor import DataIngestor
@@ -17,4 +16,4 @@ webserver.data_ingestor = DataIngestor("./nutrition_activity_obesity_usa_subset.
 # Initialize the job handler
 job_handler = JobHandler(webserver)
 
-from app import routes
+from app.routes import post_routes, get_routes, example_routes

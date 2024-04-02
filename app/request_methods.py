@@ -1,5 +1,6 @@
 """
-This module contains the methods that are called by the API endpoints.
+This module contains the methods that are called by the API endpoints when registering a job.
+These methods are responsible for processing the data and returning the results to the user.
 """
 
 import pandas
