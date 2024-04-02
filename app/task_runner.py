@@ -6,6 +6,7 @@ import os
 
 from queue import Queue
 from threading import Thread, Lock
+from flask import jsonify
 
 class ThreadPool:
     """
@@ -54,7 +55,8 @@ class ThreadPool:
 
         # If the shutdown procedure has started, do not add any more jobs
         if self.shutdown_flag:
-            return False
+            # Return an error message
+            return jsonify({"job_id": -1, "reason": "shutting down"})
 
         # Add the job to the job status dictionary as "running"
         with self.job_status_lock:
@@ -62,7 +64,9 @@ class ThreadPool:
 
         # Add the job to the job queue (a job consists of a closure and an id)
         self.job_queue.put((job, job_id))
-        return True
+
+        # Return the job id
+        return jsonify({"job_id": job_id})
 
 
     def update_job_status(self, job_id, status):

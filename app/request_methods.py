@@ -6,6 +6,7 @@ import pandas
 
 from app import webserver
 
+
 def states_mean(question):
     """
     Calculate the mean value of the data for each state for a given question.
