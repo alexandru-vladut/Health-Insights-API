@@ -3,6 +3,7 @@ This module defines the JobHandler class, which is responsible
 for registering jobs in the ThreadPool.
 """
 
+import os
 import json
 
 from threading import Lock
@@ -68,6 +69,9 @@ class JobHandler:
         """
         Save the result of a job to a JSON file.
         """
+        
+        if not os.path.exists('results'):
+            os.makedirs('results')
 
         with open(f"results/{job_id}.json", "w", encoding='utf-8') as file:
             json.dump(result, file)
