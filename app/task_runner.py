@@ -26,7 +26,10 @@ class ThreadPool:
     - shutdown(): Initiates a graceful shutdown of the thread pool.
     """
 
-    def __init__(self):
+    def __init__(self, webserver):
+        # Store the webserver instance
+        self.webserver = webserver
+
         # Define the number of threads to be used by the thread pool
         num_threads = int(os.getenv('TP_NUM_OF_THREADS', os.cpu_count()))
 
@@ -53,8 +56,13 @@ class ThreadPool:
         Add a job to the queue (called by the webserver when a new reqquest is made)
         """
 
+        self.webserver.logger.info(f"Adding job with ID {job_id} to the queue...")
+
         # If the shutdown procedure has started, do not add any more jobs
         if self.shutdown_flag:
+            self.webserver.logger.infof(
+                f"Shutdown procedure has started, not adding job with ID {job_id} to the queue.")
+
             # Return an error message
             return jsonify({"job_id": -1, "reason": "shutting down"})
 
@@ -64,6 +72,8 @@ class ThreadPool:
 
         # Add the job to the job queue (a job consists of a closure and an id)
         self.job_queue.put((job, job_id))
+
+        self.webserver.logger.info(f"Job with ID {job_id} added to the queue.")
 
         # Return the job id
         return jsonify({"job_id": job_id})

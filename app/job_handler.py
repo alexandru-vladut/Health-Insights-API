@@ -35,15 +35,26 @@ class JobHandler:
         Registers a job in the ThreadPool and returns the associated job_id.
         """
 
+        self.webserver.logger.info("Registering job...")
+
         job_id = self.assign_new_job_id()
+
+        self.webserver.logger.info(f"Assigned job ID: {job_id}")
 
         # Define a job closure
         def job():
+
+            self.webserver.logger.info(f"Started executing job with ID: {job_id}")
+
             # Execute job
             result = execute_job(question) if state is None else execute_job(question, state)
 
+            self.webserver.logger.info(f"Finished executing job with ID: {job_id}")
+
             # Save the result in a JSON file
             self.save_result(result, job_id)
+
+            self.webserver.logger.info(f"Saved result of job with ID: {job_id}")
 
         # Add job (job closure and its id) to Queue
         add_job_result = self.webserver.tasks_runner.add_job(job, job_id)
@@ -59,6 +70,8 @@ class JobHandler:
         (because more requests can come in parallel to the server)
         """
 
+        self.webserver.logger.info("Assigning new job ID...")
+
         with self.job_counter_lock:
             job_id = f"job_id_{self.job_counter}"
             self.job_counter += 1
@@ -70,6 +83,8 @@ class JobHandler:
         """
         Save the result of a job to a JSON file.
         """
+
+        self.webserver.logger.info(f"Saving result of job with ID: {job_id}")
 
         if not os.path.exists('results'):
             os.makedirs('results')

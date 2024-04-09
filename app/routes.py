@@ -9,6 +9,7 @@ import json
 from flask import request, jsonify
 from app import webserver, request_methods
 
+
 # ================== POST ROUTES ==================
 
 @webserver.route('/api/states_mean', methods=['POST'])
@@ -20,6 +21,8 @@ def states_mean_request():
     # Get request data
     data = request.json
     question = data.get('question')
+
+    webserver.logger.info(f"Received states_mean request.\nQuestion: {question}")
 
     # Register job. Don't wait for task to finish
     register_job_result = webserver.job_handler.register_job(request_methods.states_mean, question)
@@ -39,8 +42,11 @@ def state_mean_request():
     question = data.get('question')
     state = data.get('state')
 
+    webserver.logger.info(f"Received state_mean request.\nQuestion: {question}\nState: {state}")
+
     # Register job. Don't wait for task to finish
-    register_job_result = webserver.job_handler.register_job(request_methods.state_mean, question, state)
+    register_job_result = webserver.job_handler.register_job(
+        request_methods.state_mean, question, state)
 
     # Return associated job_id or error message if shutdown procedure has started
     return register_job_result
@@ -55,6 +61,8 @@ def best5_request():
     # Get request data
     data = request.json
     question = data.get('question')
+
+    webserver.logger.info(f"Received best5 request.\nQuestion: {question}")
 
     # Register job. Don't wait for task to finish
     register_job_result = webserver.job_handler.register_job(request_methods.best5, question)
@@ -73,6 +81,8 @@ def worst5_request():
     data = request.json
     question = data.get('question')
 
+    webserver.logger.info(f"Received worst5 request.\nQuestion: {question}")
+
     # Register job. Don't wait for task to finish
     register_job_result = webserver.job_handler.register_job(request_methods.worst5, question)
 
@@ -89,6 +99,8 @@ def global_mean_request():
     # Get request data
     data = request.json
     question = data.get('question')
+
+    webserver.logger.info(f"Received global_mean request.\nQuestion: {question}")
 
     # Register job. Don't wait for task to finish
     register_job_result = webserver.job_handler.register_job(request_methods.global_mean, question)
@@ -107,8 +119,11 @@ def diff_from_mean_request():
     data = request.json
     question = data.get('question')
 
+    webserver.logger.info(f"Received diff_from_mean request.\nQuestion: {question}")
+
     # Register job. Don't wait for task to finish
-    register_job_result = webserver.job_handler.register_job(request_methods.diff_from_mean, question)
+    register_job_result = webserver.job_handler.register_job(
+        request_methods.diff_from_mean, question)
 
     # Return associated job_id or error message if shutdown procedure has started
     return register_job_result
@@ -124,6 +139,9 @@ def state_diff_from_mean_request():
     data = request.json
     question = data.get('question')
     state = data.get('state')
+
+    webserver.logger.info(
+        f"Received state_diff_from_mean request.\nQuestion: {question}\nState: {state}")
 
     # Register job. Don't wait for task to finish
     register_job_result = webserver.job_handler.register_job(
@@ -143,8 +161,11 @@ def mean_by_category_request():
     data = request.json
     question = data.get('question')
 
+    webserver.logger.info(f"Received mean_by_category request.\nQuestion: {question}")
+
     # Register job. Don't wait for task to finish
-    register_job_result = webserver.job_handler.register_job(request_methods.mean_by_category, question)
+    register_job_result = webserver.job_handler.register_job(
+        request_methods.mean_by_category, question)
 
     # Return associated job_id or error message if shutdown procedure has started
     return register_job_result
@@ -160,6 +181,9 @@ def state_mean_by_category_request():
     data = request.json
     question = data.get('question')
     state = data.get('state')
+
+    webserver.logger.info(
+        f"Received state_mean_by_category request.\nQuestion: {question}\nState: {state}")
 
     # Register job. Don't wait for task to finish
     register_job_result = webserver.job_handler.register_job(
@@ -177,9 +201,12 @@ def get_response(job_id):
     Get the result of a job based on the job_id.
     """
 
+    webserver.logger.info(f"Received get_results request for job with ID: {job_id}")
+
     # Check if job_id is valid and get its status
     with webserver.tasks_runner.job_status_lock:
         if job_id not in webserver.tasks_runner.job_status:
+            webserver.logger.error(f"Invalid job_id: {job_id}")
             return jsonify({"status": "error", "reason": "Invalid job_id"})
 
         job_status = webserver.tasks_runner.job_status[job_id]
@@ -192,15 +219,18 @@ def get_response(job_id):
 
     # If the job is still running
     if job_status == "running":
+        webserver.logger.info(f"Job with ID {job_id} is still running.")
         return jsonify({"status": "running"})
 
     # If the job is done, check if the file exists and return its content
     if os.path.exists(result_file_path):
         with open(result_file_path, 'r', encoding='utf-8') as file:
             res = json.load(file)
+            webserver.logger.info(f"Job with ID {job_id} is done. Returning result...")
             return jsonify({"status": "done", "data": res})
 
     # Handle the case where the job is done but the file does not exist
+    webserver.logger.error(f"Job with ID {job_id} is done, but result file is missing.")
     return jsonify({"status": "error", "reason": "Job completed, but result file is missing"})
 
 
@@ -210,8 +240,12 @@ def graceful_shutdown_request():
     Handle the graceful_shutdown request.
     """
 
+    webserver.logger.info("Received graceful_shutdown request. Initiating shutdown procedure...")
+
     # Trigger the shutdown of the ThreadPool
     webserver.tasks_runner.shutdown()
+
+    webserver.logger.info("Shutdown procedure completed.")
 
     # Return server status
     return jsonify({"status": "shutting down"})
@@ -222,6 +256,8 @@ def jobs_request():
     """
     Handle the jobs request.
     """
+
+    webserver.logger.info("Received jobs request.")
 
     # Get the status of all jobs
     with webserver.tasks_runner.job_status_lock:
@@ -236,6 +272,8 @@ def num_jobs_request():
     """
     Handle the num_jobs request.
     """
+
+    webserver.logger.info("Received num_jobs request.")
 
     # Get the number of running jobs
     with webserver.tasks_runner.job_status_lock:
