@@ -7,7 +7,7 @@ import os
 import json
 
 from flask import request, jsonify
-from app import job_handler, webserver, request_methods
+from app import webserver, request_methods
 
 # ================== POST ROUTES ==================
 
@@ -22,7 +22,7 @@ def states_mean_request():
     question = data.get('question')
 
     # Register job. Don't wait for task to finish
-    register_job_result = job_handler.register_job(request_methods.states_mean, question)
+    register_job_result = webserver.job_handler.register_job(request_methods.states_mean, question)
 
     # Return associated job_id or error message if shutdown procedure has started
     return register_job_result
@@ -40,7 +40,7 @@ def state_mean_request():
     state = data.get('state')
 
     # Register job. Don't wait for task to finish
-    register_job_result = job_handler.register_job(request_methods.state_mean, question, state)
+    register_job_result = webserver.job_handler.register_job(request_methods.state_mean, question, state)
 
     # Return associated job_id or error message if shutdown procedure has started
     return register_job_result
@@ -57,7 +57,7 @@ def best5_request():
     question = data.get('question')
 
     # Register job. Don't wait for task to finish
-    register_job_result = job_handler.register_job(request_methods.best5, question)
+    register_job_result = webserver.job_handler.register_job(request_methods.best5, question)
 
     # Return associated job_id or error message if shutdown procedure has started
     return register_job_result
@@ -74,7 +74,7 @@ def worst5_request():
     question = data.get('question')
 
     # Register job. Don't wait for task to finish
-    register_job_result = job_handler.register_job(request_methods.worst5, question)
+    register_job_result = webserver.job_handler.register_job(request_methods.worst5, question)
 
     # Return associated job_id or error message if shutdown procedure has started
     return register_job_result
@@ -91,7 +91,7 @@ def global_mean_request():
     question = data.get('question')
 
     # Register job. Don't wait for task to finish
-    register_job_result = job_handler.register_job(request_methods.global_mean, question)
+    register_job_result = webserver.job_handler.register_job(request_methods.global_mean, question)
 
     # Return associated job_id or error message if shutdown procedure has started
     return register_job_result
@@ -108,7 +108,7 @@ def diff_from_mean_request():
     question = data.get('question')
 
     # Register job. Don't wait for task to finish
-    register_job_result = job_handler.register_job(request_methods.diff_from_mean, question)
+    register_job_result = webserver.job_handler.register_job(request_methods.diff_from_mean, question)
 
     # Return associated job_id or error message if shutdown procedure has started
     return register_job_result
@@ -126,8 +126,8 @@ def state_diff_from_mean_request():
     state = data.get('state')
 
     # Register job. Don't wait for task to finish
-    register_job_result = job_handler.register_job(request_methods.state_diff_from_mean,
-                                                   question, state)
+    register_job_result = webserver.job_handler.register_job(
+        request_methods.state_diff_from_mean, question, state)
 
     # Return associated job_id or error message if shutdown procedure has started
     return register_job_result
@@ -144,7 +144,7 @@ def mean_by_category_request():
     question = data.get('question')
 
     # Register job. Don't wait for task to finish
-    register_job_result = job_handler.register_job(request_methods.mean_by_category, question)
+    register_job_result = webserver.job_handler.register_job(request_methods.mean_by_category, question)
 
     # Return associated job_id or error message if shutdown procedure has started
     return register_job_result
@@ -162,8 +162,8 @@ def state_mean_by_category_request():
     state = data.get('state')
 
     # Register job. Don't wait for task to finish
-    register_job_result = job_handler.register_job(request_methods.state_mean_by_category,
-                                                   question, state)
+    register_job_result = webserver.job_handler.register_job(
+        request_methods.state_mean_by_category, question, state)
 
     # Return associated job_id or error message if shutdown procedure has started
     return register_job_result
