@@ -129,7 +129,8 @@ def state_diff_from_mean_request():
     state = data.get('state')
 
     # Register job. Don't wait for task to finish
-    register_job_result = job_handler.register_job(request_methods.state_diff_from_mean, question, state)
+    register_job_result = job_handler.register_job(request_methods.state_diff_from_mean,
+                                                   question, state)
 
     # Return associated job_id or error message if shutdown procedure has started
     return register_job_result
@@ -166,7 +167,8 @@ def state_mean_by_category_request():
     state = data.get('state')
 
     # Register job. Don't wait for task to finish
-    register_job_result = job_handler.register_job(request_methods.state_mean_by_category, question, state)
+    register_job_result = job_handler.register_job(request_methods.state_mean_by_category,
+                                                   question, state)
 
     # Return associated job_id or error message if shutdown procedure has started
     return register_job_result
