@@ -19,7 +19,6 @@ def states_mean_request():
 
     # Get request data
     data = request.json
-    print(f"Got request {data}")
     question = data.get('question')
 
     # Register job. Don't wait for task to finish
@@ -37,7 +36,6 @@ def state_mean_request():
 
     # Get request data
     data = request.json
-    print(f"Got request {data}")
     question = data.get('question')
     state = data.get('state')
 
@@ -56,7 +54,6 @@ def best5_request():
 
     # Get request data
     data = request.json
-    print(f"Got request {data}")
     question = data.get('question')
 
     # Register job. Don't wait for task to finish
@@ -74,7 +71,6 @@ def worst5_request():
 
     # Get request data
     data = request.json
-    print(f"Got request {data}")
     question = data.get('question')
 
     # Register job. Don't wait for task to finish
@@ -92,7 +88,6 @@ def global_mean_request():
 
     # Get request data
     data = request.json
-    print(f"Got request {data}")
     question = data.get('question')
 
     # Register job. Don't wait for task to finish
@@ -110,7 +105,6 @@ def diff_from_mean_request():
 
     # Get request data
     data = request.json
-    print(f"Got request {data}")
     question = data.get('question')
 
     # Register job. Don't wait for task to finish
@@ -128,7 +122,6 @@ def state_diff_from_mean_request():
 
     # Get request data
     data = request.json
-    print(f"Got request {data}")
     question = data.get('question')
     state = data.get('state')
 
@@ -148,7 +141,6 @@ def mean_by_category_request():
 
     # Get request data
     data = request.json
-    print(f"Got request {data}")
     question = data.get('question')
 
     # Register job. Don't wait for task to finish
@@ -166,7 +158,6 @@ def state_mean_by_category_request():
 
     # Get request data
     data = request.json
-    print(f"Got request {data}")
     question = data.get('question')
     state = data.get('state')
 
@@ -185,8 +176,6 @@ def get_response(job_id):
     """
     Get the result of a job based on the job_id.
     """
-
-    print(f"JobID is {job_id}")
 
     # Check if job_id is valid and get its status
     with webserver.tasks_runner.job_status_lock:
@@ -268,7 +257,6 @@ def post_endpoint():
     if request.method == 'POST':
         # Assuming the request contains JSON data
         data = request.json
-        print(f"got data in post {data}")
 
         # Process the received data
         # For demonstration purposes, just echoing back the received data
