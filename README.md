@@ -1,0 +1,1 @@
+zip -r Alexandru-Nicolae_VLADUT_332CA README.md git-log api_server.py app/ unittests/ -x 'app/__pycache__/*'

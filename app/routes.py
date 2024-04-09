@@ -211,9 +211,6 @@ def get_response(job_id):
 
         job_status = webserver.tasks_runner.job_status[job_id]
 
-    if not os.path.exists('results'):
-        os.makedirs('results')
-
     # Define the path to the job's result file
     result_file_path = f"./results/{job_id}.json"
 
