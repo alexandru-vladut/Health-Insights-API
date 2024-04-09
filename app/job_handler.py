@@ -3,7 +3,6 @@ This module defines the JobHandler class, which is responsible
 for registering jobs in the ThreadPool.
 """
 
-import os
 import json
 
 from threading import Lock

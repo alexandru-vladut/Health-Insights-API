@@ -44,7 +44,7 @@ class ThreadPool:
         self.shutdown_flag = False
 
         # Create the workers
-        self.workers = [TaskRunner(self.job_queue) for _ in range(num_threads)]
+        self.workers = [TaskRunner(self.job_queue, self.webserver) for _ in range(num_threads)]
 
         # Start the workers
         for worker in self.workers:
@@ -118,14 +118,13 @@ class TaskRunner(Thread):
     - run(): The main function of the worker thread.
     """
 
-    def __init__(self, job_queue):
+    def __init__(self, job_queue, webserver):
         # init necessary data structures
         super().__init__()
         self.job_queue = job_queue
+        self.webserver = webserver
 
     def run(self):
-        from app import webserver
-
         while True:
             # Get pending job
             task = self.job_queue.get()
@@ -140,7 +139,7 @@ class TaskRunner(Thread):
             job()
 
             # Update job status to "done"
-            webserver.tasks_runner.update_job_status(job_id, "done")
+            self.webserver.tasks_runner.update_job_status(job_id, "done")
 
             # Mark the job as done (decrement the queue's internal counter)
             self.job_queue.task_done()
