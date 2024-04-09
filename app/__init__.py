@@ -16,4 +16,4 @@ webserver.data_ingestor = DataIngestor("./nutrition_activity_obesity_usa_subset.
 # Initialize the job handler
 job_handler = JobHandler(webserver)
 
-from app.routes import post_routes, get_routes, example_routes
+from app import routes
