@@ -56,6 +56,7 @@ class JobHandler:
         """
         Generate a unique job_id and increment the job_counter
         Use a Lock to ensure that the job_counter is only accessed by one thread at a time
+        (because more requests can come in parallel to the server)
         """
 
         with self.job_counter_lock:
@@ -69,7 +70,7 @@ class JobHandler:
         """
         Save the result of a job to a JSON file.
         """
-        
+
         if not os.path.exists('results'):
             os.makedirs('results')
 
