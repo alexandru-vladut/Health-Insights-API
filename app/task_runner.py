@@ -60,7 +60,7 @@ class ThreadPool:
 
         # If the shutdown procedure has started, do not add any more jobs
         if self.shutdown_flag:
-            self.webserver.logger.infof(
+            self.webserver.logger.info(
                 f"Shutdown procedure has started, not adding job with ID {job_id} to the queue.")
 
             # Return an error message
